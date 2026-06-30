@@ -8,9 +8,9 @@ version = "0.1.0"
 description = "Google Firestore persistence backend for CrewAI Flows with built-in message pruning via agentstate-reducer"
 authors = [{name = "Kamal", email = "skamalj@github.com"}]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai>=0.100.0",
+    "crewai>=1.0.0,<2.0.0",
     "google-cloud-firestore"
 ]
 keywords = ["crewai", "flows", "persistence", "firestore", "google-cloud", "agent-state", "message-reducer"]

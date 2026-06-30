@@ -44,8 +44,8 @@ def test_save_and_load_state():
     assert loaded["user_id"] == "kamal"
     assert loaded["step"] == 3
     assert loaded["result"] == "done"
-    assert loaded["_method_name"] == "my_step"
-    assert "_saved_at" in loaded
+    # metadata is stripped on load — must not bleed into Pydantic state rehydration
+    assert "_persistence_meta" not in loaded
 
 
 # ---------------------------------------------------------------------------
