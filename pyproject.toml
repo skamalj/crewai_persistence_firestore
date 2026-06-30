@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crewai_persistence_firestore"
+version = "0.1.0"
+description = "Google Firestore persistence backend for CrewAI Flows with built-in message pruning via agentstate-reducer"
+authors = [{name = "Kamal", email = "skamalj@github.com"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "crewai>=0.100.0",
+    "google-cloud-firestore"
+]
+keywords = ["crewai", "flows", "persistence", "firestore", "google-cloud", "agent-state", "message-reducer"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+reducer = ["agentstate-reducer>=0.1.1"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "langchain-openai",
+    "crewai_persistence_firestore[reducer]",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crewai_persistence_firestore"]
