@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+import json
+from decimal import Decimal
 from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr, Field
@@ -37,6 +39,30 @@ def _apply_reducer(reducer: Any, state: Dict[str, Any], messages_key: str, flow_
         result = reducer.reduce(existing=state[messages_key], new=[])
     state[messages_key] = result.surviving
 
+
+def _json_default(value: Any) -> Any:
+    """Make non-JSON state values serialisable (mirrors CrewAI's SQLite persistence, 1.15.22+)."""
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json")
+    if isinstance(value, (set, frozenset, tuple)):
+        return list(value)
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return int(value) if value == value.to_integral_value() else float(value)
+    if isinstance(value, (bytes, bytearray)):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def _jsonable_state(state_data: Union[Dict[str, Any], BaseModel]) -> Dict[str, Any]:
+    """Dump flow state to a JSON-safe dict (datetime, set, tuple, nested BaseModel, Decimal...)."""
+    if isinstance(state_data, BaseModel):
+        d: Dict[str, Any] = state_data.model_dump(mode="json")
+    else:
+        d = dict(state_data)
+    return json.loads(json.dumps(d, default=_json_default))
+
 class FirestoreFlowPersistence(FlowPersistence):
     """Google Firestore persistence backend for CrewAI Flows.
 
@@ -70,10 +96,7 @@ class FirestoreFlowPersistence(FlowPersistence):
         method_name: str,
         state_data: Union[Dict[str, Any], BaseModel],
     ) -> None:
-        if isinstance(state_data, BaseModel):
-            d: Dict[str, Any] = state_data.model_dump()
-        else:
-            d = dict(state_data)
+        d = _jsonable_state(state_data)
 
         if self.reducer is not None and self.messages_key in d:
             _apply_reducer(self.reducer, d, self.messages_key, flow_uuid)
